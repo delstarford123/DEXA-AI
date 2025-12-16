@@ -1,0 +1,32 @@
+[
+    {
+        "time": "00:00-00:05",
+        "scene": "Molecular space, then zoom into cellular level.",
+        "visuals": "Start with a complex 3D rotating molecular model of Dexamethasone (spheres and sticks, distinct colors for atoms). Display its chemical formula (C22H29FO5) and name 'Dexamethasone' prominently. Transition to a subtle animation showing it approaching a cell membrane.",
+        "narration": "Meet Dexamethasone, a powerful synthetic corticosteroid. Its intricate structure allows it to act as a potent anti-inflammatory and immunosuppressant in the body."
+    },
+    {
+        "time": "00:05-00:12",
+        "scene": "Cross-section of a cell: cytoplasm and nucleus.",
+        "visuals": "Dexamethasone molecule enters the cell membrane. In the cytoplasm, it encounters and binds precisely to a 3D model of the inactive Glucocorticoid Receptor (NR3C1, shown as a folded protein with a specific binding pocket). The Dexamethasone-NR3C1 complex then changes conformation and translocates through the nuclear pore into the nucleus. Inside the nucleus, the complex binds to specific DNA sequences (Glucocorticoid Response Elements), initiating transcription of anti-inflammatory genes and repressing pro-inflammatory ones.",
+        "narration": "Once inside a target cell, Dexamethasone binds to the inactive Glucocorticoid Receptor, or NR3C1, in the cytoplasm. This activated complex then translocates into the nucleus, where it precisely binds to DNA, modulating gene expression to dampen inflammatory responses."
+    },
+    {
+        "time": "00:12-00:18",
+        "scene": "Transition from general cellular action to a gastric epithelial cell.",
+        "visuals": "Visual representation of systemic anti-inflammatory effects (e.g., inflammatory cytokines diminishing). Then, focus shifts to a gastric epithelial cell. Show COX-1 enzymes embedded in the cell membrane, actively producing protective prostaglandins (represented as small, protective molecules) that contribute to the gastric mucosal barrier. An animated arrow indicates Dexamethasone's indirect effect, hinting at reduced protective prostaglandin synthesis via gene regulation (e.g., induction of annexin A1 inhibiting PLA2), subtly thinning the protective layer.",
+        "narration": "This core mechanism underpins Dexamethasone's anti-inflammatory power. However, in cells lining the stomach, corticosteroids can indirectly reduce the synthesis of protective prostaglandins, which are vital for maintaining the stomach's mucosal barrier."
+    },
+    {
+        "time": "00:18-00:25",
+        "scene": "Gastric epithelial cell, showing COX-1 enzyme interaction.",
+        "visuals": "A new molecule, Aspirin (acetylsalicylic acid, 3D model), enters the gastric cell. Aspirin irreversibly binds to and inactivates the COX-1 enzyme, preventing it from producing protective prostaglandins. Simultaneously, show Dexamethasone's continuous effect. Visualize the combined action drastically reducing the number of protective prostaglandin molecules, leaving the gastric lining exposed. A 'Danger' or 'Warning' icon flashes over the affected area.",
+        "narration": "Now, consider Aspirin. Its primary molecular action involves irreversibly inhibiting COX-1 enzymes, which are also crucial for generating protective prostaglandins in the stomach. When Dexamethasone and Aspirin are used concurrently, their distinct mechanisms converge to severely compromise the stomach's natural defense."
+    },
+    {
+        "time": "00:25-00:30",
+        "scene": "Macroscopic view of stomach lining, zooming into cellular damage.",
+        "visuals": "Start with a healthy stomach lining, showing a thick, intact mucosal barrier. As both drugs exert their effects, the barrier visibly thins and develops breaches. Animated corrosive elements appear, representing acid and digestive enzymes attacking the exposed tissue. Show small ulcerations forming and potential signs of bleeding. Text overlay: 'INCREASED RISK: GASTRIC ULCERS & BLEEDING'.",
+        "narration": "This combined reduction in gastrointestinal protection significantly elevates the risk of severe side effects, including gastric ulcers, erosion, and potentially life-threatening bleeding. Understanding these molecular interactions is paramount for safe medication use."
+    }
+]
