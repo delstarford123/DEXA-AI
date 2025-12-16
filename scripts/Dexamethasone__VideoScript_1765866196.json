@@ -1,0 +1,26 @@
+[
+    {
+        "time": "00:00-00:05",
+        "scene": "Introduction to Dexamethasone",
+        "visuals": "Title card: 'Dexamethasone: Molecular Action & Interactions'. Transition to a 2D chemical structure of Dexamethasone, highlighting its steroid backbone. Zoom in to a 3D ball-and-stick model, rotating slowly.",
+        "narration": "Meet Dexamethasone, a potent synthetic glucocorticoid widely used for its anti-inflammatory and immunosuppressive properties. Its unique structure enables powerful therapeutic effects."
+    },
+    {
+        "time": "00:05-00:15",
+        "scene": "Dexamethasone and Glucocorticoid Receptor (NR3C1) Binding",
+        "visuals": "An animated cross-section of a cell. Dexamethasone molecules (small spheres) enter the cytoplasm. A dormant Glucocorticoid Receptor (NR3C1) protein complex (larger, multi-subunit structure, possibly with chaperone proteins like HSP90) is visible. Dexamethasone binds to NR3C1, causing a conformational change and dissociation from chaperones. The activated Dexamethasone-NR3C1 complex then translocates into the cell nucleus.",
+        "narration": "Once inside the cell, Dexamethasone binds to the inactive Glucocorticoid Receptor, or NR3C1, in the cytoplasm. This binding activates the receptor, allowing the complex to move into the nucleus where it modulates gene expression, reducing inflammation and suppressing immune responses."
+    },
+    {
+        "time": "00:15-00:25",
+        "scene": "Drug-Drug Interaction: Dexamethasone + Ketoconazole",
+        "visuals": "Inside a liver cell, Dexamethasone molecules approach a representation of the CYP3A4 enzyme (a P450 enzyme structure). Dexamethasone is shown being metabolized/broken down by CYP3A4. Introduce Ketoconazole molecules entering the cell and strongly binding to and inhibiting CYP3A4. Show Dexamethasone molecules now unable to be metabolized, accumulating in the bloodstream. A 'Risk' icon appears.",
+        "narration": "However, interactions can occur. Dexamethasone is primarily metabolized by the liver enzyme CYP3A4. If a patient is also taking Ketoconazole, a strong CYP3A4 inhibitor, the metabolism of Dexamethasone is significantly reduced. This leads to higher systemic concentrations of Dexamethasone, increasing the risk of adverse effects such as hyperglycemia, immunosuppression, and Cushing's syndrome-like symptoms."
+    },
+    {
+        "time": "00:25-00:30",
+        "scene": "Summary and Call to Action",
+        "visuals": "A split screen or overlay showing the key molecular mechanisms: Dexamethasone binding to NR3C1 and the inhibition of CYP3A4 by Ketoconazole, leading to increased Dexamethasone levels. Text overlay: 'Consult your healthcare provider'.",
+        "narration": "Understanding these molecular interactions is crucial. Always consult your healthcare professional to review all medications and potential drug interactions to ensure safe and effective treatment."
+    }
+]

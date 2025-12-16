@@ -1,0 +1,20 @@
+[
+    {
+        "time": "00:00-00:07",
+        "scene": "Opening title card, then molecular structure view.",
+        "visuals": "Animated title: 'Dexamethasone: Molecular Action & Interactions'. Transition to a vibrant 3D ball-and-stick model of Dexamethasone, rotating slowly. Key chemical groups (e.g., steroid backbone, ketone, hydroxyls) briefly highlight.",
+        "narration": "Meet Dexamethasone, a potent synthetic corticosteroid. Used for its powerful anti-inflammatory and immunosuppressive effects, its intricate structure enables diverse therapeutic actions."
+    },
+    {
+        "time": "00:07-00:20",
+        "scene": "Gastrointestinal tract, cellular level interaction leading to damage.",
+        "visuals": "Animation of a stomach lining cross-section. Dexamethasone molecules appear, interacting with gastric mucosal cells. Simultaneously, Naproxen molecules appear, also interacting. Both drugs converge, leading to visual erosion and ulceration of the stomach lining. A prominent 'WARNING' overlay with a bleeding stomach icon.",
+        "narration": "A critical interaction: Dexamethasone combined with NSAIDs like Naproxen significantly elevates the risk of gastrointestinal ulcers and bleeding. Dexamethasone impairs protective mucus production, while Naproxen inhibits vital prostaglandins, weakening the stomach's natural defenses, leading to a dangerous synergistic effect."
+    },
+    {
+        "time": "00:20-00:30",
+        "scene": "Cellular interior, receptor binding and nuclear translocation.",
+        "visuals": "Zoom into a eukaryotic cell. Dexamethasone molecule diffuses through the cell membrane. It then binds specifically to a 3D model of the NR3C1 protein (Glucocorticoid Receptor) in the cytoplasm. The Dexamethasone-NR3C1 complex undergoes a conformational change and translocates into the nucleus, approaching DNA strands.",
+        "narration": "Inside the cell, Dexamethasone exerts its primary action by binding to the NR3C1, the Glucocorticoid Receptor. This drug-receptor complex then moves into the nucleus, where it regulates gene expression, switching on or off specific genes to mediate its powerful anti-inflammatory and immunosuppressive effects."
+    }
+]

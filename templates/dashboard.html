@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexaGen-AI | Multi-Scale Clinical Assistant</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.92);
+            --accent: #764ba2;
+        }
+
+        body {
+            background: #f0f2f5;
+            background-image: radial-gradient(#764ba2 0.5px, transparent 0.5px), radial-gradient(#764ba2 0.5px, #f0f2f5 0.5px);
+            background-size: 20px 20px;
+            font-family: 'Poppins', sans-serif;
+            color: #2d3748;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar { background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .brand-text { font-weight: 700; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        /* Stats Badges */
+        .stat-badge {
+            background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Report Text Formatting */
+        .report-section strong { color: var(--accent); font-weight: 700; }
+        .md-data { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #d63384; background: rgba(214, 51, 132, 0.1); padding: 2px 6px; border-radius: 4px; }
+
+        /* Loaders */
+        .quantum-loader {
+            width: 40px; height: 40px; border: 3px solid rgba(118, 75, 162, 0.2);
+            border-radius: 50%; border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toggle Switches */
+        .nav-pills .nav-link.active { background: var(--primary-grad); box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4); }
+        .nav-pills .nav-link { color: #666; font-weight: 600; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="#"><i class="fa-solid fa-dna me-2"></i>DEXA AI</a>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="d-none d-md-flex align-items-center text-muted small">
+                    <i class="fa-solid fa-server me-1"></i> <span id="serverStatus" class="text-success fw-bold">ONLINE</span>
+                </div>
+                <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="toggleVoice()">
+                    <i id="muteIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5 flex-grow-1">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="glass-card p-4 h-100">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 ls-1">Configuration</h6>
+                    
+                    <ul class="nav nav-pills nav-fill mb-4" id="modeTabs">
+                        <li class="nav-item"><a class="nav-link active" onclick="setMode('single')" href="#">Single Agent</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="setMode('dual')" href="#">Interaction (DDI)</a></li>
+                    </ul>
+
+                    <form id="singleForm">
+                        <label class="form-label fw-bold small">Target Compound</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-flask"></i></span>
+                            <input type="text" class="form-control form-control-lg border-start-0 ps-0" id="smilesInput" placeholder="Name (e.g. Prednisone)">
+                        </div>
+                        
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="fill('Dexamethasone')">Dexamethasone</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="fill('Hydrocortisone')">Hydrocortisone</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="fill('Ibuprofen')">Ibuprofen</button>
+                        </div>
+
+                        <div class="alert alert-light border small text-muted mb-4">
+                            <i class="fa-solid fa-info-circle me-1"></i> 
+                            Activating <strong>Clinical AI</strong>...
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 shadow-sm fw-bold" style="background: var(--primary-grad); border:none;">
+                            RUN ANALYSIS
+                        </button>
+                    </form>
+
+                    <form id="dualForm" class="d-none">
+                        <label class="form-label fw-bold small text-primary">Primary Agent (Steroid)</label>
+                        <input type="text" class="form-control mb-3" id="drugA" value="Dexamethasone">
+                        
+                        <div class="text-center text-muted my-2"><i class="fa-solid fa-xmark"></i></div>
+                        
+                        <label class="form-label fw-bold small text-danger">Secondary Agent (NSAID/Other)</label>
+                        <input type="text" class="form-control mb-4" id="drugB" placeholder="e.g. Aspirin">
+
+                        <button type="submit" class="btn btn-dark w-100 py-3 rounded-3 fw-bold">
+                            PREDICT INTERACTION (DDI)
+                        </button>
+                    </form>
+                    
+                    <button type="button" onclick="triggerVideoPipeline()" class="btn btn-warning w-100 py-2 rounded-3 fw-bold mt-3">
+                        <i class="fa-solid fa-film me-2"></i> GENERATE MOLECULAR VIDEO
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="glass-card p-4 animate__animated animate__fadeInUp">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="fw-bold m-0"><i class="fa-solid fa-file-medical-alt me-2 text-primary"></i>Analysis Report</h5>
+                        <div class="d-flex gap-2">
+                            <button onclick="askGemini('phenotype')" class="btn btn-sm btn-light border"><i class="fa-solid fa-dna me-1"></i> Phenotype</button>
+                            <button onclick="askGemini('clinical')" class="btn btn-sm btn-light border"><i class="fa-solid fa-user-doctor me-1"></i> Clinical</button>
+                        </div>
+                    </div>
+
+                    <div id="resultsContainer" class="bg-white p-3 rounded-3 border">
+                        <div class="text-center text-muted py-4">
+                            <i class="fa-solid fa-microscope fa-2x mb-2 opacity-25"></i>
+                            <p class="small">System Ready. Initiate analysis to view binding affinity, physical properties, and clinical forecasts.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="videoAutomationContainer" class="mt-4 d-none">
+                        <h6 class="fw-bold text-primary"><i class="fa-solid fa-play-circle me-2"></i>Live Molecular Simulation</h6>
+                        
+                        <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden shadow-sm position-relative">
+                            
+                            <video id="autoVideoPlayer" controls autoplay muted loop class="w-100" style="z-index: 10;">
+                                <source id="autoVideoSource" src="" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+
+                            <div id="fallbackMoleculeViewer" class="position-absolute top-0 start-0 w-100 h-100 bg-black d-none" style="z-index: 20;"></div>
+                            
+                            <div id="videoErrorOverlay" class="position-absolute bottom-0 start-0 w-100 p-2 text-center text-white bg-danger bg-opacity-75 d-none" style="z-index: 30; font-size: 0.8rem;">
+                                Video load failed. Switched to Real-time 3D Structure.
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light border-start border-4 border-warning mt-2">
+                            <small class="text-muted d-block uppercase fw-bold" style="font-size: 0.7rem;">AI Visual Script</small>
+                            <p id="autoScriptPreview" class="small mb-0 fst-italic"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-90 d-none flex-column align-items-center justify-content-center" style="z-index: 2000;">
+        <div class="quantum-loader mb-3"></div>
+        <div class="text-white small fw-bold text-uppercase ls-2">Processing...</div>
+    </div>
+
+    <div class="modal fade" id="BarrackAbonyoAdviceModal" tabindex="-1" aria-labelledby="AbonyoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white" style="background: var(--primary-grad); border:none;">
+                    <h5 class="modal-title fw-bold" id="AbonyoModalLabel"><i class="fa-solid fa-user-tie me-2"></i>Expert Advisory (Prof. Abonyo)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex mb-3">
+                        <i class="fa-solid fa-stethoscope fa-3x text-accent me-3"></i>
+                        <div>
+                            <p class="mb-0 fw-bold">Pharmacokinetic Assessment:</p>
+                            <span class="small text-muted">A note from the DEXA AI Chief Investigator.</span>
+                        </div>
+                    </div>
+                    
+                    <p id="adviceText" class="lead small"></p>
+
+                    <div class="alert alert-info small mt-4">
+                        <i class="fa-solid fa-vial-circle-check me-1"></i>
+                        This assessment is derived from real-time **physicochemical simulation** to predict bioavailability.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Acknowledge</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="VideoOutputModal" tabindex="-1" aria-labelledby="VideoOutputModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="VideoOutputModalLabel"><i class="fa-solid fa-video me-2"></i> Molecular Video Simulation Complete</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="lead small text-success fw-bold">Script generated by Gemini, asset simulated via Cloudinary.</p>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Simulated Video URL</label>
+                        <input type="text" id="videoUrlOutput" class="form-control" readonly>
+                    </div>
+                    <div class="p-3 bg-light rounded border">
+                        <h6 class="fw-bold text-primary">Script Preview:</h6>
+                        <p id="scriptPreviewOutput" class="small fst-italic mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a id="videoLink" href="#" target="_blank" class="btn btn-primary"><i class="fa-solid fa-external-link-alt me-1"></i> View Simulated Asset</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SETUP ---
+        // Removed main viewer initialization
+        let synth = window.speechSynthesis;
+        let isMuted = false;
+        let lastContext = "";
+        
+        // --- 2. MODES ---
+        function setMode(mode) {
+            $('.nav-link').removeClass('active');
+            if (mode === 'single') {
+                $('#singleForm').removeClass('d-none'); $('#dualForm').addClass('d-none');
+                $(event.target).addClass('active');
+            } else {
+                $('#singleForm').addClass('d-none'); $('#dualForm').removeClass('d-none');
+                $(event.target).addClass('active');
+            }
+        }
+        function fill(val) { $('#smilesInput').val(val); }
+
+        // --- 3. SINGLE DRUG ANALYSIS ---
+        $('#singleForm').on('submit', async (e) => {
+            e.preventDefault();
+            const input = $('#smilesInput').val();
+            if(!input) return;
+
+            toggleLoader(true, "Running Clinical Analysis...");
+            
+            try {
+                const res = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ smiles: input, drug_name: input })
+                });
+                const data = await res.json();
+                
+                toggleLoader(false);
+                if(data.error) { showError(data.error); return; }
+
+                renderSingleResult(data);
+                // visualizeMolecule(data.smiles); // REMOVED
+                
+                lastContext = data.explanation;
+                
+                triggerAbonyoAdvice(data.md_data.molecular_weight, data.md_data.tpsa);
+                
+                const fullText = `Analysis complete for ${data.drug_name}. ${data.risk_level} binding probability detected. ${data.explanation}`;
+                speak(fullText);
+
+            } catch (err) {
+                toggleLoader(false);
+                showError("Server Connection Failed");
+            }
+        });
+
+        // --- 4. DUAL DRUG ANALYSIS ---
+        $('#dualForm').on('submit', async (e) => {
+            e.preventDefault();
+            const d1 = $('#drugA').val();
+            const d2 = $('#drugB').val();
+
+            toggleLoader(true, "Simulating Interaction...");
+
+            try {
+                const res = await fetch('/predict_ddi', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ drugA: d1, drugB: d2 })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+
+                renderDDIResult(data);
+                // simulateFusionAnim(); // REMOVED
+                
+                const ddiExplanation = data.details?.mechanism || data.explanation;
+                lastContext = `Interaction between ${data.drug_a} and ${data.drug_b}: ${ddiExplanation}`;
+                
+                const fullText = `Interaction analysis complete. Risk level is ${data.details?.risk_level || 'Unknown'}. ${ddiExplanation}`;
+                speak(fullText);
+
+            } catch (err) {
+                toggleLoader(false);
+                showError("Analysis Failed");
+            }
+        });
+
+        // --- 5. AI EXPLANATION ---
+        async function askGemini(type) {
+            if(!lastContext) { alert("Run analysis first!"); return; }
+            toggleLoader(true, "Consulting Gemini AI...");
+            
+            const prompt = type === 'phenotype' 
+                ? `Act as a biologist. Explain the downstream Phenotype outcomes of: ${lastContext}` 
+                : `Act as a clinician. Explain the clinical implications for a patient: ${lastContext}`;
+
+            try {
+                const res = await fetch('/ask_ai', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+                
+                const aiTxt = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI Error";
+                
+                $('#resultsContainer').append(`<div class="mt-3 p-3 bg-light rounded border-start border-4 border-warning small">${aiTxt.replace(/\n/g, '<br>')}</div>`);
+                
+                const speechText = aiTxt.replace(/[*#]/g, '');
+                speak(speechText);
+                
+            } catch(e) { toggleLoader(false); }
+        }
+
+        // --- 6. UTILS ---
+        
+        function safeFloat(value) {
+            try {
+                if (typeof value === 'string') {
+                    const match = value.match(/(\d+\.?\d*)/);
+                    return match ? parseFloat(match[0]) : 0;
+                }
+                return parseFloat(value) || 0;
+            } catch {
+                return 0;
+            }
+        }
+
+        function triggerAbonyoAdvice(mwString, tpsaString) {
+            const mw = safeFloat(mwString);
+            const tpsa = safeFloat(tpsaString);
+            let adviceHTML = '';
+            
+            if (mw < 500) {
+                adviceHTML += `<p><i class="fa-solid fa-check-circle text-success me-2"></i><strong>Molecular Weight (MW: ${mw.toFixed(2)} g/mol):</strong> This value is excellent, adhering to Lipinski's Rule for ideal oral absorption.</p>`;
+            } else {
+                adviceHTML += `<p><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i><strong>Molecular Weight (MW: ${mw.toFixed(2)} g/mol):</strong> Caution advised. The high MW may limit passive diffusion and significantly reduce oral bioavailability.</p>`;
+            }
+
+            if (tpsa < 90) {
+                adviceHTML += `<p><i class="fa-solid fa-brain text-accent me-2"></i><strong>TPSA (${tpsa.toFixed(2)} Å²):</strong> HIGH PERMEABILITY. This low polar surface area strongly suggests the compound can readily cross the blood-brain barrier (BBB) and other cell membranes.</p>`;
+            } else if (tpsa < 140) {
+                adviceHTML += `<p><i class="fa-solid fa-lungs me-2"></i><strong>TPSA (${tpsa.toFixed(2)} Å²):</strong> Good membrane permeability is expected. Excellent for general systemic absorption.</p>`;
+            } else {
+                adviceHTML += `<p><i class="fa-solid fa-ban text-danger me-2"></i><strong>TPSA (${tpsa.toFixed(2)} Å²):</strong> Low permeability. Expect poor absorption and low bioavailability, likely requiring non-oral administration.</p>`;
+            }
+
+            $('#adviceText').html(adviceHTML);
+            const adviceModal = new bootstrap.Modal(document.getElementById('BarrackAbonyoAdviceModal'));
+            adviceModal.show();
+        }
+
+        function renderSingleResult(data) {
+            const colorClass = data.risk_level === 'HIGH' ? 'text-success' : (data.risk_level === 'MODERATE' ? 'text-warning' : 'text-danger');
+            const mw = data.md_data?.molecular_weight || 'N/A';
+            const tpsa = data.md_data?.tpsa || 'N/A';
+            
+            const html = `
+                <div class="d-flex align-items-center mb-3 border-bottom pb-2">
+                    <h2 class="display-6 fw-bold mb-0 me-3 ${colorClass}">${data.percentage}</h2>
+                    <div class="lh-1">
+                        <div class="small text-muted text-uppercase fw-bold">Binding Probability</div>
+                        <div class="badge bg-dark">${data.risk_level} AFFINITY</div>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><div class="stat-badge">MW: <span class="md-data">${mw}</span></div></div>
+                    <div class="col-6"><div class="stat-badge">TPSA: <span class="md-data">${tpsa}</span></div></div>
+                </div>
+                <div class="report-section text-secondary small" style="line-height: 1.6;">
+                    ${data.explanation.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            $('#resultsContainer').html(html);
+        }
+
+        function renderDDIResult(data) {
+            const details = data.details;
+            const colorClass = details.risk_level === 'HIGH' || details.risk_level === 'CRITICAL' 
+                ? 'alert-danger' 
+                : (details.risk_level === 'MODERATE' ? 'alert-warning' : 'alert-success');
+            
+            const icon = details.risk_level === 'LOW' ? 'fa-check-circle' : 'fa-triangle-exclamation';
+
+            const html = `
+                <div class="alert ${colorClass} border-0 shadow-sm mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid ${icon} fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading fw-bold mb-0">${details.risk_level}: ${details.title}</h5>
+                            <small>Interaction Analysis between ${data.drug_a} & ${data.drug_b}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="text-primary fw-bold mb-2"><i class="fa-solid fa-gears me-2"></i>Mechanism & Site</h6>
+                            <p class="small text-secondary mb-0">${details.mechanism}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="text-info fw-bold mb-2"><i class="fa-solid fa-dna me-2"></i>Proteins Affected</h6>
+                            <span class="badge bg-white text-dark border">${details.proteins}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded border border-start border-4 border-danger">
+                            <h6 class="text-danger fw-bold mb-2"><i class="fa-solid fa-heart-crack me-2"></i>Clinical Consequences</h6>
+                            <p class="small text-dark mb-0">${details.consequence}</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-success bg-opacity-10 rounded border border-success">
+                            <h6 class="text-success fw-bold mb-2"><i class="fa-solid fa-user-doctor me-2"></i>Clinical Advice</h6>
+                            <p class="small text-dark mb-0 fst-italic">"${details.advice}"</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#resultsContainer').html(html);
+        }
+
+        function toggleLoader(show, msg) {
+            if(show) {
+                $('#loadingOverlay').removeClass('d-none').addClass('d-flex');
+                $('#loadingOverlay .text-white').text(msg);
+            } else {
+                $('#loadingOverlay').addClass('d-none').removeClass('d-flex');
+            }
+        }
+
+        function showError(msg) {
+            $('#resultsContainer').html(`<div class="text-danger fw-bold"><i class="fa-solid fa-circle-xmark me-2"></i>${msg}</div>`);
+        }
+
+        function toggleVoice() {
+            isMuted = !isMuted;
+            $('#muteIcon').toggleClass('fa-volume-high fa-volume-xmark');
+            if(isMuted) synth.cancel();
+        }
+
+        function speak(text) {
+            if(isMuted) return;
+            const cleanText = text.replace(/[*#]/g, '').replace(/<br>/g, '. ');
+            const ut = new SpeechSynthesisUtterance(cleanText);
+            const voices = synth.getVoices();
+            const v = voices.find(voice => voice.name.includes("Google US English")) || voices[0];
+            if(v) ut.voice = v;
+            synth.speak(ut);
+        }
+
+        // --- VIDEO & FALLBACK LOGIC ---
+
+        async function triggerVideoPipeline() {
+            let d1 = $('#drugA').val() || $('#smilesInput').val();
+            if(!d1) d1 = "C[C@]12C[C@@H](C)C3[C@H]([C@@H]1CC[C@@]2(C(=O)CO)O)CCC4=CC(=O)C=C[C@]34C"; 
+            
+            const d2 = !$('#dualForm').hasClass('d-none') ? $('#drugB').val() : "";
+
+            toggleLoader(true, "Processing Multimedia Assets...");
+
+            try {
+                const res = await fetch('/make_video', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ drugA: d1, drugB: d2, protein: 'NR3C1' })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+
+                $('#videoAutomationContainer').removeClass('d-none');
+                document.getElementById('videoAutomationContainer').scrollIntoView({ behavior: 'smooth' });
+                
+                $('#fallbackMoleculeViewer').addClass('d-none');
+                $('#videoErrorOverlay').addClass('d-none');
+                $('#autoVideoPlayer').removeClass('d-none');
+                $('#autoScriptPreview').text(data.script_preview || "Analysis loaded.");
+
+                $('#videoUrlOutput').val(data.video_url);
+                $('#scriptPreviewOutput').text(data.script_preview);
+                $('#videoLink').attr('href', data.video_url);
+
+                const player = document.getElementById('autoVideoPlayer');
+                const source = document.getElementById('autoVideoSource');
+
+                player.onerror = function() {
+                    console.log("Video failed to load. Switching to 3D Fallback.");
+                    activateFallbackMode(d1);
+                };
+
+                if (!data.video_url || data.video_url.trim() === "") {
+                    activateFallbackMode(d1);
+                } else {
+                    source.src = data.video_url;
+                    player.load();
+                    
+                    var playPromise = player.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => { console.log("Autoplay prevented or load failed"); });
+                    }
+                }
+                speak("Multimedia simulation generated.");
+
+            } catch (err) {
+                toggleLoader(false);
+                $('#videoAutomationContainer').removeClass('d-none');
+                activateFallbackMode(d1);
+            }
+        }
+
+        function activateFallbackMode(smilesOrName) {
+            $('#autoVideoPlayer').addClass('d-none');
+            $('#fallbackMoleculeViewer').removeClass('d-none');
+            $('#videoErrorOverlay').removeClass('d-none');
+            $('#fallbackMoleculeViewer').empty();
+
+            let fallbackViewer = $3Dmol.createViewer($('#fallbackMoleculeViewer'), { backgroundColor: '#000000' });
+            let structureToDraw = smilesOrName;
+            if(!structureToDraw.includes('=')) {
+                structureToDraw = "C[C@]12C[C@@H](C)C3[C@H]([C@@H]1CC[C@@]2(C(=O)CO)O)CCC4=CC(=O)C=C[C@]34C"; 
+            }
+
+            fallbackViewer.addModel(structureToDraw, "smi");
+            fallbackViewer.setStyle({}, {sphere: {scale: 0.3}, stick: {radius: 0.2, colorscheme: "Jmol"}});
+            fallbackViewer.zoomTo();
+            fallbackViewer.render();
+
+            function animateFallback() {
+                if(!$('#fallbackMoleculeViewer').hasClass('d-none')) {
+                    fallbackViewer.rotate(1); 
+                    requestAnimationFrame(animateFallback);
+                }
+            }
+            animateFallback();
+        }
+    </script>
+</body>
+</html>

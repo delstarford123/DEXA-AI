@@ -1,0 +1,26 @@
+[
+    {
+        "time": "00:00-00:07",
+        "scene": "Opening with a clean, white background. A complex molecular structure emerges and rotates slowly.",
+        "visuals": "3D molecular model of Dexamethasone (C22H29FO5) appearing, highlighting its steroid backbone and specific functional groups (keto, hydroxyl, fluorine). Text overlay: 'Dexamethasone'.",
+        "narration": "Meet Dexamethasone, a powerful synthetic corticosteroid. This intricate molecule is widely recognized for its potent anti-inflammatory and immunosuppressive properties, crucial in treating a vast array of conditions."
+    },
+    {
+        "time": "00:07-00:18",
+        "scene": "Transition to a simplified cell diagram. Dexamethasone molecule enters the cell and interacts with a cytoplasmic protein.",
+        "visuals": "Animated Dexamethasone molecule diffusing across a cell membrane into the cytoplasm. It then binds to a pre-existing, inactive NR3C1 (Glucocorticoid Receptor) protein. The complex undergoes a conformational change, then translocates into the nucleus and binds to specific DNA sequences (Glucocorticoid Response Elements - GREs), illustrating modulation of gene expression (mRNA synthesis depicted as increased/decreased).",
+        "narration": "Inside the cell, Dexamethasone acts by binding to its primary target: the NR3C1, or Glucocorticoid Receptor. This drug-receptor complex then translocates into the nucleus, where it binds to specific DNA sequences, modulating gene expression to exert its profound therapeutic effects."
+    },
+    {
+        "time": "00:18-00:27",
+        "scene": "Introduce a second drug, Rifampicin. Focus on its impact on Dexamethasone's metabolism in a liver cell context.",
+        "visuals": "A new molecule, Rifampicin (shown in a distinct color/shape), appears. A stylized liver cell is shown, with a focus on its endoplasmic reticulum. Rifampicin is shown entering the liver cell and stimulating the increased production/activity of CYP3A4 enzymes. Subsequently, Dexamethasone molecules entering the liver cell are rapidly intercepted and metabolized (broken down) by the activated CYP3A4 enzymes.",
+        "narration": "However, Dexamethasone's efficacy can be significantly impacted by other medications. Consider Rifampicin, an antibiotic that is also a potent inducer of the CYP3A4 enzyme in the liver. This enzyme is primarily responsible for Dexamethasone's metabolism."
+    },
+    {
+        "time": "00:27-00:30",
+        "scene": "Illustrate the outcome of the drug interaction.",
+        "visuals": "Fewer intact Dexamethasone molecules are shown leaving the liver cell and reaching the target cells/NR3C1 receptors. Text overlay: 'Reduced Dexamethasone Concentration \u2192 Diminished Therapeutic Effect'.",
+        "narration": "When taken concurrently, Rifampicin dramatically accelerates Dexamethasone's breakdown, leading to lower active drug concentrations and potentially compromising its intended anti-inflammatory or immunosuppressive benefits. Always consult your doctor about potential drug interactions."
+    }
+]

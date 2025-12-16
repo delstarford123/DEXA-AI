@@ -1,0 +1,26 @@
+[
+    {
+        "time": "00:00-00:05",
+        "scene": "Molecular Introduction",
+        "visuals": "Opening shot: Dark, abstract cellular background. A 3D model of Dexamethasone's molecular structure appears, rotating slowly. Key chemical groups (e.g., ketone, hydroxyl, fluorine) are highlighted briefly with subtle glow effects and labels. Text overlay: 'Dexamethasone'",
+        "narration": "Welcome to the molecular world of Dexamethasone, a powerful synthetic glucocorticoid. Its precise molecular architecture, including a unique fluorine atom, gives it exceptional potency in combating inflammation."
+    },
+    {
+        "time": "00:05-00:15",
+        "scene": "Cellular Interaction - Glucocorticoid Receptor (NR3C1) Binding",
+        "visuals": "Zoom into the cytoplasm of a cell. A large, complex 3D model of the Glucocorticoid Receptor (NR3C1) appears, initially in an inactive conformation. Dexamethasone molecules diffuse towards it, one molecule docking perfectly into the receptor's binding pocket. The receptor undergoes a clear conformational change upon binding. The activated complex then translocates into the cell nucleus.",
+        "narration": "Once inside a target cell, Dexamethasone seeks out the Glucocorticoid Receptor, or NR3C1. It binds with high affinity to this receptor, inducing a critical conformational change that activates it. This activated complex then moves into the nucleus, modulating gene expression to produce anti-inflammatory effects."
+    },
+    {
+        "time": "00:15-00:25",
+        "scene": "Drug-Drug Interaction - Hydrocortisone Competition",
+        "visuals": "In the same cellular environment, a new 3D model of Hydrocortisone appears, visually distinct but structurally similar to Dexamethasone. Hydrocortisone molecules also approach NR3C1 receptors. Show a direct competition: Dexamethasone consistently outcompetes Hydrocortisone for binding sites. Some receptors are already occupied by Dexamethasone; newly introduced Hydrocortisone struggles to bind or is quickly displaced.",
+        "narration": "Now, let's introduce Hydrocortisone, a natural glucocorticoid. It also binds to the NR3C1 receptor, but Dexamethasone possesses significantly higher binding affinity and potency. This creates a competitive scenario. When both drugs are present, Dexamethasone effectively 'wins' the binding battle."
+    },
+    {
+        "time": "00:25-00:30",
+        "scene": "Clinical Implication & Conclusion",
+        "visuals": "Close-up on a single NR3C1 receptor binding pocket, with Dexamethasone firmly anchored. Hydrocortisone is shown hovering nearby, unable to bind effectively. A subtle 'diminished effect' graphic appears over the Hydrocortisone molecule. The scene then transitions back to a molecular overview of both drugs.",
+        "narration": "This strong competition means Dexamethasone can significantly reduce the binding and subsequent therapeutic effects of Hydrocortisone. Clinically, this drug-drug interaction highlights a risk: concurrent use could diminish Hydrocortisone's intended action, impacting patient management. Understanding this mechanism is vital."
+    }
+]
