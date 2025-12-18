@@ -82,7 +82,7 @@ def preprocess_multiscale():
     y = []
     
     positive_count = 0
-    
+
     for i, row in df.iterrows():
         name = str(row['Drug_Name'])
         smiles = str(row['SMILES'])

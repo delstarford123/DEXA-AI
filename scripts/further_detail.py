@@ -1,120 +1,139 @@
 import textwrap
 import re
 
+# --- HELPER FUNCTIONS ---
+
 def safe_float(value):
-    """
-    Helper: Converts varied inputs (strings with units, None, etc.) into a clean float.
-    Ex: "362.47 g/mol" -> 362.47
-    """
+    """Converts varied inputs (strings with units, None) into a clean float."""
     try:
         if value is None: return 0.0
         if isinstance(value, (int, float)): return float(value)
-        
-        # Remove non-numeric characters (except dot)
         clean = re.sub(r'[^\d.]', '', str(value))
         return float(clean) if clean else 0.0
     except:
         return 0.0
 
+def get_dosage_guideline(mw):
+    """
+    (Point 4) Predicts dosage strategy based on molecular weight.
+    Heuristic: Smaller molecules often require higher frequency or specific dosing.
+    """
+    if mw < 300:
+        return "Standard oral dosing (e.g., 50-100mg) every 4-6 hours due to likely rapid metabolism."
+    elif mw < 500:
+        return "Once or twice daily oral dosing (e.g., 10-20mg). Optimal bioavailability range."
+    else:
+        return "High molecular weight suggests potential injection or controlled-release formulation required."
+
+def get_safe_combinations(target_function):
+    """
+    (New Feature) Predicts drugs that are likely SAFE to use together.
+    """
+    if "Glucocorticoid" in target_function:
+        return " Proton Pump Inhibitors (e.g., Omeprazole) for stomach protection, and certain Antibiotics (e.g., Amoxicillin)."
+    if "Cyclooxygenase" in target_function: # NSAIDs
+        return " Acetaminophen (Paracetamol) for synergistic pain relief, and Antihistamines."
+    if "Angiotensin" in target_function: # ACE Inhibitors
+        return " Calcium Channel Blockers (e.g., Amlodipine) and Thiazide Diuretics."
+    if "Opioid" in target_function:
+        return " NSAIDs (e.g., Ibuprofen) for multimodal analgesia to reduce opioid requirement."
+    if "AMP" in target_function: # Metformin
+        return " Sulfonylureas (e.g., Glipizide) or Insulin for enhanced glycemic control."
+    
+    return " Multivitamins and basic analgesics (consult pharmacist for specific interactions)."
+
+def get_clinical_profile(target_function):
+    """
+    (Points 6 & 7) Returns 'Who Should Avoid' and 'Important Info'.
+    """
+    profile = {
+        "avoid": "General caution in pregnancy, breastfeeding, and severe liver failure.",
+        "storage": "Store at room temperature (20-25°C). Keep away from moisture.",
+        "legal": "Prescription Only (Rx)",
+        "warnings": "May cause dizziness or drowsiness."
+    }
+
+    if "Glucocorticoid" in target_function:
+        profile.update({
+            "avoid": "Patients with systemic fungal infections, uncontrolled diabetes, or active Tuberculosis.",
+            "storage": "Protect from light and heat.",
+            "legal": "Prescription / Controlled (depending on potency)",
+            "warnings": "Do not stop abruptly (risk of adrenal crisis). May mask signs of infection."
+        })
+    elif "Cyclooxygenase" in target_function:
+        profile.update({
+            "avoid": "Patients with active peptic ulcers, bleeding disorders, or severe kidney disease.",
+            "legal": "OTC (Low dose) / Rx (High dose)",
+            "warnings": "Stop use if signs of GI bleeding (black stools) occur."
+        })
+    elif "Opioid" in target_function:
+        profile.update({
+            "avoid": "Patients with respiratory depression, severe asthma, or history of substance abuse.",
+            "legal": "Controlled Substance (Schedule II/III)",
+            "warnings": "High risk of addiction and respiratory arrest. Avoid alcohol completely."
+        })
+    elif "Angiotensin" in target_function: # BP Meds
+        profile.update({
+            "avoid": "Pregnant women (teratogenic risk) and patients with bilateral renal artery stenosis.",
+            "warnings": "May cause dry cough or angioedema (swelling). Stop if pregnant."
+        })
+    
+    return profile
+
+# --- MAIN GENERATOR FUNCTION ---
+
 def generate_clinical_report(drug_name, score, md_data, phenotype_data):
     """
-    Generates a comprehensive medical report based on Multi-Scale Analysis.
+    Generates a comprehensive medical report covering Points 1-7.
     """
     
-    # 1. Interpret AI Confidence
+    # 1. Parse Data
     percentage = score * 100
-    if percentage > 75:
-        affinity_desc = "High Binding Affinity (Strong Agonist Potential)"
-        tone = "definitive"
-    elif percentage > 40:
-        affinity_desc = "Moderate Binding Affinity (Partial Agonist/Modulator)"
-        tone = "cautious"
-    else:
-        affinity_desc = "Negligible Binding Affinity"
-        tone = "negative"
-
-    # 2. Analyze Physicochemical Properties (Lipinski's Rule of 5)
-    # FIX: Use safe_float to handle strings like "362.47 g/mol"
     mw = safe_float(md_data.get('molecular_weight', 0))
     tpsa = safe_float(md_data.get('tpsa', 0))
-    
-    absorption_analysis = []
-    
-    # MW Rule: < 500 Da is good
-    if mw > 500:
-        absorption_analysis.append(f"⚠️ High Molecular Weight ({mw:.1f} Da). Oral absorption may be limited.")
-    else:
-        absorption_analysis.append(f"✅ Molecular Weight ({mw:.1f} Da) is optimal for oral bioavailability.")
-        
-    # TPSA Rule: < 140 A^2 is good
-    if tpsa > 140:
-        absorption_analysis.append(f"⚠️ High Polarity (TPSA {tpsa:.1f} Å²). Blood-Brain Barrier (BBB) penetration unlikely.")
-    else:
-        absorption_analysis.append(f"✅ TPSA ({tpsa:.1f} Å²) suggests good intestinal absorption and membrane permeability.")
-
-    physio_summary = " ".join(absorption_analysis)
-
-    # 3. Generate Clinical Protocol based on Target
-    # Extracts the "function" from the dictionary safely
     target_function = phenotype_data.get('function', 'Unknown Target')
-    
-    protocol = []
-    
-    if "Glucocorticoid" in target_function:
-        protocol = [
-            "Baseline Monitoring: Assess Fasting Blood Glucose, HbA1c, and Lipid Profile prior to initiation.",
-            "Risk Management: Weigh benefits against risk of metabolic dysregulation (Diabetes) and adrenal suppression.",
-            "Patient Education: Instruct patient to report symptoms of hyperglycemia (polydipsia, polyuria) immediately.",
-            "Long-term Strategy: If chronic use is required, implement a tapering schedule to prevent adrenal crisis."
-        ]
-    elif "Cyclooxygenase" in target_function:
-        protocol = [
-            "Gastrointestinal Safety: Assess history of peptic ulcers. Consider prophylaxis with PPIs for high-risk patients.",
-            "Renal Function: Monitor Serum Creatinine and GFR, especially in elderly or hypovolemic patients.",
-            "Cardiovascular Risk: Use lowest effective dose for shortest duration to minimize thrombotic risk."
-        ]
-    elif "Angiotensin" in target_function or "Beta" in target_function:
-        protocol = [
-            "Hemodynamics: Monitor Blood Pressure and Heart Rate regularly.",
-            "Electrolytes: Check Potassium levels (risk of Hyperkalemia).",
-            "Adherence: Educate patient on the importance of consistent dosing to prevent rebound hypertension."
-        ]
-    elif "Opioid" in target_function:
-        protocol = [
-            "Respiratory Safety: Monitor respiratory rate and sedation level.",
-            "Addiction Risk: Screen utilizing tools like SOAPP-R prior to initiation.",
-            "Co-prescribing: Avoid concurrent Benzodiazepines or CNS depressants."
-        ]
-    elif "AMP" in target_function: # Metformin/Diabetes
-        protocol = [
-            "Renal Function: Contraindicated if eGFR < 30 mL/min/1.73 m² due to risk of lactic acidosis.",
-            "Vitamin B12: Periodic monitoring recommended as long-term use can decrease absorption.",
-            "Gastrointestinal: Titrate dose slowly to minimize diarrhea and nausea."
-        ]
-    else:
-        protocol = ["General Safety: Monitor for standard adverse drug reactions (ADRs) and hypersensitivity."]
+    phenotype_prediction = phenotype_data.get('phenotype', 'No specific data available.')
 
-    # 4. Construct the Full Report
-    # We format this carefully for the text-to-speech engine
+    # 2. Logic for Pill ID / Discovery (Point 1 & 5)
+    # If it fits Lipinski rules, it's a good oral drug candidate
+    is_drug_like = (mw < 500 and tpsa < 140)
+    discovery_status = "High Drug-Likeness (Oral Candidate)" if is_drug_like else "Low Oral Bioavailability (Likely Injectable/Topical)"
+    
+    tone = "definitive" if percentage > 75 else "cautious" if percentage > 40 else "negative"
+    
+    # 3. Get Clinical Details
+    safety = get_clinical_profile(target_function)
+    safe_combos = get_safe_combinations(target_function)
+    dosage = get_dosage_guideline(mw)
+
+    # 4. Construct Report
     report = f"""
-Clinical Analysis Report for {drug_name}.
+CLINICAL INTELLIGENCE REPORT: {drug_name}
 
-1. AI Molecular Intelligence.
-Prediction: {percentage:.1f}% Probability of Interaction.
-Interpretation: {affinity_desc}.
-Target Identified: {target_function}.
+1. AI MOLECULAR ANALYSIS
+   - Prediction: {percentage:.1f}% Probability of Interaction.
+   - Target Identified: {target_function}
+   - Predicted Phenotype: {phenotype_prediction}
 
-2. Physicochemical Suitability.
-{physio_summary}
+2. DRUG DISCOVERY & ID (Points 1 & 5)
+   - Discovery Classification: {discovery_status}
+   - Identification Hint: { "Likely a small tablet/capsule" if mw < 500 else "Likely a large molecule/biologic" }.
+   - Molecular Weight: {mw:.2f} g/mol
 
-3. Clinical Forecast.
-Predicted Phenotype: {phenotype_data.get('phenotype', 'No specific data available.')}
+3. DOSAGE & ADMINISTRATION (Point 4)
+   - Guideline: {dosage}
 
-4. Clinical Management Plan.
-{'. '.join(protocol)}
+4. SAFETY PROFILE (Point 6 - Who Should Avoid)
+   - CONTRAINDICATED IN: {safety['avoid']}
 
-5. Recommendation.
-Based on the {tone} binding profile and physical properties, this compound { "warrants further investigation" if percentage > 40 else "does not appear to be a viable candidate for this target" }.
+5. IMPORTANT INFORMATION (Point 7)
+   - Storage: {safety['storage']}
+   - Legal Status: {safety['legal']}
+   - Special Warnings: {safety['warnings']}
+
+6. INTERACTION INTELLIGENCE (Point 3)
+   - Safe Combinations: Generally safe to co-administer with {safe_combos}
+   - Recommendation: Based on the {tone} binding profile, this compound { "is a strong candidate for therapy" if percentage > 40 else "requires structural optimization" }.
     """
     
     return report.strip()

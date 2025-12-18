@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexaGen-AI | Discovery Studio</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
+        :root {
+            --discovery-grad: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --glass-bg: rgba(255, 255, 255, 0.90); 
+            --text-dark: #2d3748;
+            --brand-green: #38ef7d;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- VIDEO BACKGROUND --- */
+        .video-background {
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -1; overflow: hidden;
+        }
+        .video-background video { width: 100%; height: 100%; object-fit: cover; }
+        .video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.88); /* Slightly darker for chart contrast */
+            backdrop-filter: blur(4px);
+        }
+
+        /* --- UI COMPONENTS --- */
+        .navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .brand-text { font-weight: 700; background: var(--discovery-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .media-container {
+            position: relative; background: #0f172a; border-radius: 20px;
+            overflow: hidden; height: 500px; 
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
+        }
+        #molViewer { width: 100%; height: 100%; position: relative; z-index: 10; cursor: grab; }
+
+        /* Actions */
+        .match-card {
+            background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .match-card:hover { transform: translateY(-4px); border-color: var(--brand-green); box-shadow: 0 10px 20px rgba(56, 239, 125, 0.15); }
+        
+        .similarity-badge { background: #dcfce7; color: #166534; font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; }
+        
+        /* New: Copy Button */
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: #f1f5f9; border: none; border-radius: 50%; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center; color: #64748b;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { background: var(--brand-green); color: white; }
+
+        .nav-pills .nav-link.active { background: var(--discovery-grad); color: white; }
+        .nav-pills .nav-link { color: #64748b; font-weight: 600; }
+
+        .footer-compact {
+            width: fit-content; margin: 30px auto; padding: 10px 40px;
+            background: rgba(255, 255, 255, 0.9); border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .offcanvas-header { background: var(--discovery-grad); color: white; }
+        .viewer-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 5; display: none; }
+        
+        /* Chart Container */
+        .chart-wrapper { height: 250px; width: 100%; position: relative; }
+    </style>
+</head>
+<body>
+
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="{{ url_for('static', filename='video.mp4') }}" type="video/mp4">
+            <source src="/video.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-light border me-3 rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftSidebar">
+                    <i class="fa-solid fa-bars text-success"></i>
+                </button>
+                <a class="navbar-brand brand-text" href="#"><i class="fa-solid fa-flask-vial me-2"></i>DISCOVERY STUDIO</a>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-none d-md-block text-muted small bg-light px-3 py-1 rounded-pill border">
+                    <i class="fa-solid fa-database me-1 text-success"></i> DB: <span class="fw-bold text-dark">raw_drug_data.csv</span>
+                </div>
+                <button class="btn btn-sm btn-outline-success rounded-pill px-3 bg-white" onclick="toggleVoice()">
+                    <i id="muteIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="leftSidebar">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold">Navigation</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-2 p-4">
+            <a href="/" class="btn btn-light text-start py-3"><i class="fa-solid fa-house-medical me-3 text-primary"></i>Clinical Dashboard</a>
+            <a href="/discovery" class="btn btn-light text-start py-3 active border-success"><i class="fa-solid fa-flask-vial me-3 text-success"></i>Drug Discovery Studio</a>
+        </div>
+    </div>
+
+    <div class="container my-5 flex-grow-1">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="glass-card p-4 h-100 animate__animated animate__fadeInLeft">
+                    
+                    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill" id="taskTabs">
+                        <li class="nav-item"><a class="nav-link active rounded-pill" onclick="setTask('search')" href="javascript:void(0)">DB Search</a></li>
+                        <li class="nav-item"><a class="nav-link rounded-pill" onclick="setTask('novel')" href="javascript:void(0)">Novel Analysis</a></li>
+                    </ul>
+
+                    <form id="searchForm" class="animate__animated animate__fadeIn">
+                        <label class="form-label fw-bold small text-success">Find Similar Compounds</label>
+                        <textarea class="form-control mb-3 border-0 bg-light" id="searchSmiles" rows="4" placeholder="Enter target SMILES to find structural analogs..." style="font-family: monospace; font-size:0.85rem;"></textarea>
+                        
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-success w-50 bg-white" onclick="$('#searchSmiles').val('CC1=CN=C(S1)NC(=O)C2=C(C3=CC=CC=C3S(=O)(=O)N2C)O')">Meloxicam-Like</button>
+                            <button type="button" class="btn btn-sm btn-outline-success w-50 bg-white" onclick="$('#searchSmiles').val('CC1CC2C3CCC4=CC(=O)C=CC4(C3(C(CC2(C1(C(=O)CO)O)C)O)F)C')">Steroid-Like</button>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-bold shadow-sm border-0" style="background: var(--discovery-grad);">
+                            <i class="fa-solid fa-magnifying-glass me-2"></i>SEARCH DATABASE
+                        </button>
+                    </form>
+
+                    <form id="novelForm" class="d-none animate__animated animate__fadeIn">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold small text-primary m-0">Unseen Structure</label>
+                            <div class="dropdown">
+                                <button class="btn btn-xs btn-link text-decoration-none small" type="button" data-bs-toggle="dropdown">✨ Add Group</button>
+                                <ul class="dropdown-menu dropdown-menu-end small shadow border-0">
+                                    <li><a class="dropdown-item" href="#" onclick="appendToSmiles('C(=O)O')">Carboxylic Acid (-COOH)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="appendToSmiles('O')">Hydroxyl (-OH)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="appendToSmiles('N')">Amine (-NH2)</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="appendToSmiles('F')">Fluorine (-F)</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <textarea class="form-control mb-3 border-0 bg-light" id="novelSmiles" rows="4" placeholder="Paste new/theoretical SMILES..." style="font-family: monospace;"></textarea>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm border-0">
+                            <i class="fa-solid fa-flask me-2"></i>RUN PHARMACO-AI
+                        </button>
+                    </form>
+
+                    <div id="scoreContainer" class="mt-4 d-none animate__animated animate__fadeInUp">
+                        <hr class="mb-4">
+                        <div class="row text-center g-3">
+                            <div class="col-6" data-bs-toggle="tooltip" title="Quantitative Estimate of Drug-likeness (0-1)">
+                                <div class="score-display" id="mainScore">0.0</div>
+                                <div class="score-label">QED SCORE</div>
+                            </div>
+                            <div class="col-6" data-bs-toggle="tooltip" title="Lipinski Rule Violations (Target: 0)">
+                                <div class="score-display text-warning" id="ro5Score">0</div>
+                                <div class="score-label">RO5 VIOLATIONS</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm" id="viabilityBadge">Status Pending</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                
+                <div class="glass-card p-1 mb-4 animate__animated animate__fadeInDown">
+                    <div class="media-container">
+                        <div id="molViewer"></div>
+                        <div id="viewerPlaceholder" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white-50">
+                            <div class="text-center">
+                                <i class="fa-solid fa-atom fa-4x mb-3 animate__animated animate__spin animate__slow animate__infinite"></i>
+                                <p class="small text-uppercase ls-2">Visual Engine Ready</p>
+                            </div>
+                        </div>
+                        <div id="viewerLoader" class="viewer-loader"><div class="spinner-border text-success"></div></div>
+                        <div id="clickHint" class="position-absolute bottom-0 w-100 text-center text-white-50 pb-2 small d-none">
+                            <i class="fa-solid fa-rotate me-1"></i> Interactive Model
+                        </div>
+                        
+                        <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-3" onclick="alert('Full screen mode active')"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                
+                <div id="matchesContainer" class="d-none animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-end mb-3 px-2">
+                        <h5 class="fw-bold m-0 text-white text-shadow"><i class="fa-solid fa-network-wired me-2 text-success"></i>Database Matches</h5>
+                        <small class="text-white-50">Ranked by Tanimoto Similarity</small>
+                    </div>
+                    <div class="row g-3" id="matchList"></div>
+                </div>
+
+                <div id="novelDetailsContainer" class="glass-card p-4 d-none animate__animated animate__fadeInUp">
+                    <div class="row">
+                        <div class="col-md-5 d-flex flex-column justify-content-center">
+                            <h5 class="fw-bold text-primary mb-3">Chemical Profile</h5>
+                            <div class="p-3 bg-light rounded border mb-2">
+                                <small class="text-muted d-block text-uppercase fw-bold">Molecular Weight</small>
+                                <h4 class="fw-bold mb-0" id="resMW">0 g/mol</h4>
+                                <small class="text-success"><i class="fa-solid fa-check-circle"></i> Optimal &lt; 500</small>
+                            </div>
+                            <div class="p-3 bg-light rounded border">
+                                <small class="text-muted d-block text-uppercase fw-bold">LogP (Lipophilicity)</small>
+                                <h4 class="fw-bold mb-0" id="resLogP">0.0</h4>
+                                <small class="text-success"><i class="fa-solid fa-check-circle"></i> Optimal &lt; 5</small>
+                            </div>
+                            <button class="btn btn-outline-dark w-100 mt-3" onclick="window.print()">
+                                <i class="fa-solid fa-file-export me-2"></i>Export Report
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-7 border-start">
+                            <h6 class="text-center text-muted small fw-bold text-uppercase mb-3">Multidimensional Analysis (Lipinski)</h6>
+                            <div class="chart-wrapper">
+                                <canvas id="propertiesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer-compact text-center text-muted">
+        <span class="fw-bold text-dark">DEXAGEN AI</span> <span class="mx-2 text-success">|</span> Discovery Engine V2.1
+    </footer>
+
+    <script>
+        // --- CHART.JS SETUP ---
+        let radarChart = null;
+        function initChart(data) {
+            const ctx = document.getElementById('propertiesChart').getContext('2d');
+            if (radarChart) radarChart.destroy();
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Mol. Weight', 'LogP', 'H-Donors', 'H-Acceptors', 'Rotatable Bonds'],
+                    datasets: [{
+                        label: 'Candidate Profile',
+                        data: data, // [MW/100, LogP, HD, HA, RB] scaled
+                        backgroundColor: 'rgba(56, 239, 125, 0.2)',
+                        borderColor: '#38ef7d',
+                        pointBackgroundColor: '#11998e',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            suggestedMin: 0,
+                            suggestedMax: 10
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- SHARED LOGIC ---
+        let synth = window.speechSynthesis;
+        let isMuted = false;
+
+        function toggleVoice() { isMuted = !isMuted; $('#muteIcon').toggleClass('fa-volume-high fa-volume-xmark'); if(isMuted) synth.cancel(); }
+        function speak(text) { if(!isMuted) { synth.cancel(); synth.speak(new SpeechSynthesisUtterance(text.replace(/[*#]/g, ''))); } }
+        
+        function appendToSmiles(group) {
+            let val = $('#novelSmiles').val();
+            $('#novelSmiles').val(val + group);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert("SMILES copied to clipboard!");
+        }
+
+        function setTask(task) {
+            $('.nav-link').removeClass('active');
+            $('#searchForm, #novelForm, #matchesContainer, #novelDetailsContainer, #scoreContainer').addClass('d-none');
+            if(task === 'search') $('#searchForm').removeClass('d-none');
+            else $('#novelForm').removeClass('d-none');
+            $(event.target).addClass('active');
+        }
+
+        // --- SEARCH ---
+        $('#searchForm').on('submit', async (e) => {
+            e.preventDefault();
+            const smiles = $('#searchSmiles').val();
+            if(!smiles) return;
+            
+            run3D(smiles);
+            toggleButton('#searchForm button', true);
+
+            try {
+                const res = await fetch('/discover', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ smiles, mode: 'search' })
+                });
+                const data = await res.json();
+                
+                $('#matchesContainer').removeClass('d-none');
+                $('#matchList').empty();
+
+                if(data.results.matches && data.results.matches.length > 0) {
+                    speak(`Found ${data.results.count} matches.`);
+                    let html = '';
+                    data.results.matches.forEach(m => {
+                        html += `
+                        <div class="col-md-6 animate__animated animate__fadeInUp">
+                            <div class="match-card">
+                                <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${m.smiles}')" title="Copy SMILES"><i class="fa-solid fa-copy"></i></button>
+                                <div class="p-3" onclick="run3D('${m.smiles}')">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold m-0 text-dark">${m.name}</h6>
+                                        <span class="similarity-badge">${m.similarity}%</span>
+                                    </div>
+                                    <div class="small text-muted mb-2">CID: ${m.cid}</div>
+                                    <div class="text-truncate small font-monospace text-secondary" style="max-width: 90%;">${m.smiles}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    $('#matchList').html(html);
+                } else {
+                    $('#matchList').html('<div class="col-12 text-center text-white py-4 opacity-75">No matches found.</div>');
+                }
+            } catch(e) { alert("Error"); } finally { toggleButton('#searchForm button', false, 'SEARCH DATABASE'); }
+        });
+
+        // --- NOVEL ---
+        $('#novelForm').on('submit', async (e) => {
+            e.preventDefault();
+            const smiles = $('#novelSmiles').val();
+            if(!smiles) return;
+
+            run3D(smiles);
+            toggleButton('#novelForm button', true);
+
+            try {
+                const res = await fetch('/discover', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ smiles, mode: 'novel' })
+                });
+                const data = await res.json();
+                const info = data.results;
+
+                $('#scoreContainer, #novelDetailsContainer').removeClass('d-none');
+                $('#mainScore').text(info.drug_likeness_score);
+                $('#ro5Score').text(info.rule_of_five_violations);
+                $('#resMW').text(info.molecular_weight + " g/mol");
+                $('#resLogP').text(info.logp);
+                
+                const isViable = info.is_viable_candidate;
+                $('#viabilityBadge').text(info.viability_status).attr('class', `badge px-3 py-2 rounded-pill shadow-sm ${isViable ? 'bg-success' : 'bg-danger'}`);
+                
+                speak(`Analysis complete. QED Score is ${info.drug_likeness_score}.`);
+
+                // Initialize Radar Chart (Scaling MW by 100 for visibility)
+                initChart([
+                    info.molecular_weight / 100, 
+                    info.logp, 
+                    5, // Placeholder for H-Donors (Need backend update to send this exact val)
+                    10, // Placeholder for H-Acceptors
+                    8   // Placeholder for Rotatable Bonds
+                ]);
+
+            } catch(e) { alert("Error"); } finally { toggleButton('#novelForm button', false, 'ANALYZE VIABILITY'); }
+        });
+
+        async function run3D(smiles) {
+            $('#viewerPlaceholder').addClass('d-none');
+            $('#clickHint').removeClass('d-none');
+            $('#viewerLoader').show();
+            let element = $('#molViewer');
+            element.empty();
+            let viewer = $3Dmol.createViewer(element, {backgroundColor: '#0f172a'});
+            try {
+                const res = await fetch('/predict', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ smiles: smiles, drug_name: "Visual" })
+                });
+                const data = await res.json();
+                if (data.mol_3d) {
+                    viewer.addModel(data.mol_3d, "sdf");
+                    viewer.setStyle({}, {stick: {radius: 0.2, colorscheme: "Jmol"}, sphere: {scale: 0.3}});
+                    viewer.zoomTo();
+                    viewer.render();
+                    viewer.animate({loop: "true", step: 0.5});
+                }
+            } catch(e) { console.log("Render Error"); } finally { $('#viewerLoader').hide(); }
+        }
+
+        function toggleButton(sel, loading, txt='') {
+            $(sel).prop('disabled', loading).html(loading ? '<i class="fa-solid fa-spinner fa-spin"></i> Processing...' : txt);
+        }
+        
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+</body>
+</html>
