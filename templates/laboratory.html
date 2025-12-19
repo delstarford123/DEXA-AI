@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexaGen-AI | Virtual Laboratory</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-grad: linear-gradient(135deg, #00f3ff 0%, #0066ff 100%);
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --accent: #00f3ff;
+            --text-light: #e0f7fa;
+            --border-glass: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+            background-color: #050b14;
+        }
+
+        /* --- VIDEO BACKGROUND --- */
+        .video-background {
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -1; overflow: hidden;
+        }
+        .video-background video { width: 100%; height: 100%; object-fit: cover; }
+        .video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 11, 20, 0.9); backdrop-filter: blur(5px);
+        }
+
+        /* --- UI COMPONENTS --- */
+        .navbar { 
+            background: rgba(5, 11, 20, 0.95); 
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(10px); 
+            z-index: 1040; 
+        }
+        .brand-text { font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+        
+        .nav-btn-custom { transition: all 0.3s; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .nav-btn-custom:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: var(--border-glass);
+            border-radius: 24px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .media-container {
+            position: relative; background: #000; border-radius: 20px;
+            overflow: hidden; min-height: 400px; height: 100%;
+            box-shadow: inset 0 0 60px rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        #fallbackMoleculeViewer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; }
+        #equipmentImageDisplay { max-width: 90%; max-height: 90%; z-index: 20; display: none; border-radius: 12px; box-shadow: 0 0 20px var(--accent); }
+
+        /* TABS */
+        .nav-pills .nav-link { 
+            color: rgba(255,255,255,0.6); border-radius: 12px; transition: 0.3s; font-size: 0.9rem;
+        }
+        .nav-pills .nav-link.active { 
+            background: var(--primary-grad); color: #fff; font-weight: 600; box-shadow: 0 5px 15px rgba(0, 243, 255, 0.3);
+        }
+
+        /* INPUTS */
+        .form-control {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.1); color: var(--accent);
+        }
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.6); border-color: var(--accent); color: #fff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+        ::placeholder { color: rgba(255,255,255,0.3) !important; }
+
+        .btn-lab {
+            background: transparent; border: 1px solid var(--accent); color: var(--accent);
+            text-transform: uppercase; font-weight: 700; letter-spacing: 1px; transition: 0.3s;
+        }
+        .btn-lab:hover {
+            background: var(--accent); color: #000; box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        /* OVERLAYS */
+        .spinner-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .stat-badge {
+            background: rgba(0, 243, 255, 0.1); padding: 10px 15px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 600; border-left: 3px solid var(--accent);
+            margin-bottom: 10px; color: #fff;
+        }
+
+        .chart-container { height: 200px; width: 100%; position: relative; }
+        
+        /* OFF CANVAS */
+        .offcanvas { background-color: #0b1121; color: white; }
+        .offcanvas-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .btn-close-white { filter: invert(1); }
+    </style>
+</head>
+<body>
+
+    <div class="video-background">
+        <video autoplay muted loop playsinline>
+            <source src="{{ url_for('static', filename='video.mp4') }}" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <button class="btn nav-btn-custom me-3 rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftSidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <a class="navbar-brand brand-text" href="#"><i class="fa-solid fa-flask me-2"></i>DEXAGEN LABS</a>
+            </div>
+            <span class="badge bg-dark border border-info rounded-pill px-3 py-2"><i class="fa-solid fa-circle-check text-success me-2"></i>SYSTEM ONLINE</span>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="leftSidebar">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold text-info">MENU</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column gap-2 p-4">
+            <a href="/" class="btn btn-outline-light text-start py-3 border-0"><i class="fa-solid fa-house-medical me-3"></i>Clinical Dashboard</a>
+            <a href="/discovery" class="btn btn-outline-light text-start py-3 border-0"><i class="fa-solid fa-flask-vial me-3"></i>Drug Discovery</a>
+            <a href="/laboratory" class="btn btn-light text-start py-3 fw-bold text-dark"><i class="fa-solid fa-microscope me-3"></i>Virtual Laboratory</a>
+        </div>
+    </div>
+
+    <div class="container my-5 flex-grow-1">
+        <div class="row g-4 h-100">
+            
+            <div class="col-lg-4">
+                <div class="glass-card p-4 animate__animated animate__fadeInLeft">
+                    <h6 class="text-uppercase text-info fw-bold mb-3 ls-1"><i class="fa-solid fa-sliders me-2"></i>Control Module</h6>
+                    
+                    <ul class="nav nav-pills nav-fill mb-4" id="labTabs">
+                        <li class="nav-item"><a class="nav-link active" onclick="setMode('analyze')" href="#">Analyzer</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="setMode('synthesize')" href="#">Synthesis</a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="setMode('equipment')" href="#">Logistics</a></li>
+                    </ul>
+
+                    <form id="form-analyze" class="lab-form">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-bold small text-muted m-0">CHEMICAL STRUCTURE</label>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-decoration-none small text-info p-0" type="button" data-bs-toggle="dropdown">✨ Presets</button>
+                                <ul class="dropdown-menu dropdown-menu-dark shadow border border-info small">
+                                    <li><a class="dropdown-item" href="#" onclick="$('#analyze-smiles').val('CC(=O)Oc1ccccc1C(=O)O')">Aspirin</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="$('#analyze-smiles').val('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')">Caffeine</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="$('#analyze-smiles').val('CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C')">Testosterone</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control py-3" id="analyze-smiles" placeholder="SMILES String" value="CC(=O)Oc1ccccc1C(=O)O">
+                        </div>
+                        <div class="mb-4">
+                            <input type="text" class="form-control py-3" id="analyze-name" placeholder="Chemical Name (Optional)">
+                        </div>
+                        <button type="submit" class="btn btn-lab w-100 py-3 rounded-3">
+                            <i class="fa-solid fa-dna me-2"></i>INITIATE SCAN
+                        </button>
+                    </form>
+
+                    <form id="form-synthesize" class="lab-form d-none">
+                        <label class="form-label fw-bold small text-muted">REACTION COMPONENTS</label>
+                        <div class="mb-3">
+                            <input type="text" class="form-control py-3" id="react-a" placeholder="Reagent A (SMILES)">
+                        </div>
+                        <div class="mb-4">
+                            <input type="text" class="form-control py-3" id="react-b" placeholder="Reagent B (SMILES)">
+                        </div>
+                        <button type="submit" class="btn btn-lab w-100 py-3 rounded-3">
+                            <i class="fa-solid fa-atom me-2"></i>SIMULATE REACTION
+                        </button>
+                    </form>
+
+                    <form id="form-equipment" class="lab-form d-none">
+                        <label class="form-label fw-bold small text-muted">TASK PARAMETERS</label>
+                        
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-info">
+                                    <i class="fa-solid fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="equip-search" placeholder="Quick Search (e.g. Autoclave)">
+                                <button class="btn btn-outline-info" type="button" onclick="runEquipSearch()">GO</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <textarea class="form-control" id="task-desc" rows="4" placeholder="Or describe your goal (e.g., 'I need to separate blood plasma quickly')..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-lab w-100 py-3 rounded-3">
+                            <i class="fa-solid fa-robot me-2"></i>CONSULT AI MANAGER
+                        </button>
+                    </form>
+                    
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                
+                <div class="glass-card p-1 mb-4 animate__animated animate__fadeInDown" style="height: 450px;">
+                    <div class="media-container">
+                        <div id="viewerPlaceholder" class="text-center text-white-50">
+                            <i class="fa-solid fa-cube fa-3x mb-3 text-info opacity-50"></i>
+                            <p class="mb-0 ls-1">AWAITING INPUT DATA</p>
+                        </div>
+                        <div id="fallbackMoleculeViewer" class="d-none"></div>
+                        <img id="equipmentImageDisplay" src="" alt="Equipment">
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 animate__animated animate__fadeInUp" style="height: auto;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0 text-info"><i class="fa-solid fa-chart-pie me-2"></i>QUANTUM REPORT</h5>
+                        <div class="badge bg-dark border border-secondary" id="mode-badge">STANDBY</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-7" id="resultsContainer">
+                            <div class="text-center text-muted py-4">
+                                <p class="small">Select a module from the left to begin analysis.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-5 border-start border-secondary">
+                            <h6 class="text-center text-muted small fw-bold text-uppercase mb-3">PROPERTY RADAR</h6>
+                            <div class="chart-container">
+                                <canvas id="labRadar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="spinner-overlay">
+        <div class="spinner-border text-info mb-3" style="width: 4rem; height: 4rem;"></div>
+        <div class="text-white fw-bold ls-2">PROCESSING QUANTUM DATA...</div>
+    </div>
+
+    <script>
+        // --- CHART INITIALIZATION ---
+        let myChart = null;
+
+        function initLabChart(mw, logp) {
+            $('.chart-container').show();
+            const ctx = document.getElementById('labRadar').getContext('2d');
+            if (myChart) myChart.destroy();
+            
+            const normMW = Math.min((mw / 500) * 10, 10); 
+            const normLogP = Math.max(0, Math.min(logp * 2, 10));
+
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Weight', 'Solubility', 'Complexity', 'Bio-Safety', 'Stability'],
+                    datasets: [{
+                        label: 'Molecule Profile',
+                        data: [normMW, normLogP, 6, 8, 7],
+                        backgroundColor: 'rgba(0, 243, 255, 0.2)',
+                        borderColor: '#00f3ff',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#e0f7fa' },
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- UI LOGIC ---
+        function setMode(mode) {
+            $('.nav-link').removeClass('active');
+            $(event.target).addClass('active');
+
+            $('.lab-form').addClass('d-none');
+            $(`#form-${mode}`).removeClass('d-none');
+            
+            $('#mode-badge').text(mode.toUpperCase() + " MODE");
+
+            $('#fallbackMoleculeViewer').addClass('d-none').empty();
+            $('#equipmentImageDisplay').hide();
+            $('#viewerPlaceholder').removeClass('d-none');
+            
+            if(mode === 'equipment') $('.chart-container').parent().hide();
+            else $('.chart-container').parent().show();
+        }
+
+        function toggleLoader(show) { $('#loadingOverlay').css('display', show ? 'flex' : 'none'); }
+
+        // --- API HANDLERS ---
+
+        // 1. ANALYZER
+        $('#form-analyze').on('submit', async (e) => {
+            e.preventDefault();
+            const smiles = $('#analyze-smiles').val();
+            const name = $('#analyze-name').val();
+            if(!smiles) return;
+
+            toggleLoader(true);
+            try {
+                const res = await fetch('/lab/analyze', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ smiles, name })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+
+                if(data.error) { alert(data.error); return; }
+
+                renderResults(data, 'Analysis Result');
+                initLabChart(data.molecular_weight, data.solubility_logp);
+                activate3DViewer(smiles); 
+
+            } catch(e) { toggleLoader(false); alert("Connection Failed"); }
+        });
+
+        // 2. SYNTHESIS
+        $('#form-synthesize').on('submit', async (e) => {
+            e.preventDefault();
+            const da = $('#react-a').val();
+            const db = $('#react-b').val();
+            if(!da || !db) return;
+
+            toggleLoader(true);
+            try {
+                const res = await fetch('/lab/react', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ drug_a: da, drug_b: db })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+
+                if(data.error) { alert(data.error); return; }
+
+                const displayData = {
+                    name: "Hybrid Complex",
+                    molecular_weight: data.theoretical_weight.toFixed(2),
+                    solubility_logp: data.theoretical_solubility.toFixed(2),
+                    analysis: data.outcome_description
+                };
+
+                renderResults(displayData, 'Reaction Output');
+                initLabChart(data.theoretical_weight, data.theoretical_solubility);
+                
+                $('#viewerPlaceholder').removeClass('d-none').html('<i class="fa-solid fa-atom fa-3x text-success mb-3"></i><p>Reaction Successful</p>');
+                $('#fallbackMoleculeViewer').addClass('d-none');
+
+            } catch(e) { toggleLoader(false); alert("Connection Failed"); }
+        });
+
+        // 3. EQUIPMENT & LOGISTICS
+        $('#form-equipment').on('submit', async (e) => {
+            e.preventDefault();
+            const task = $('#task-desc').val();
+            if(task) fetchEquipmentData(task);
+        });
+
+        // NEW: Specific Search Function
+        function runEquipSearch() {
+            const query = $('#equip-search').val();
+            if(query) fetchEquipmentData(query);
+            else alert("Please enter an equipment name.");
+        }
+
+        async function fetchEquipmentData(query) {
+            toggleLoader(true);
+            try {
+                const res = await fetch('/lab/equipment', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ task: query })
+                });
+                const data = await res.json();
+                toggleLoader(false);
+
+                // Build HTML for Multiple Results
+                let htmlContent = `<h6 class="text-info fw-bold mb-3 border-bottom border-secondary pb-2">LOGISTICS REPORT</h6>`;
+                
+                if (!data.recommendations || data.recommendations.length === 0) {
+                     htmlContent += `<p class="text-muted">No specific equipment found.</p>`;
+                } else {
+                    // Loop through all recommendations
+                    data.recommendations.forEach((item) => {
+                        let badgeClass = item.status === 'Available' ? 'bg-success' : 'bg-warning text-dark';
+                        
+                        htmlContent += `
+                            <div class="mb-3 p-3 bg-dark rounded border border-secondary">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="fw-bold text-white mb-0">${item.name}</h5>
+                                    <span class="badge bg-info text-dark">${item.confidence} Match</span>
+                                </div>
+                                <div class="d-flex gap-2 mb-2">
+                                    <span class="badge ${badgeClass}">${item.status}</span>
+                                </div>
+                                
+                                <div class="d-grid gap-2 d-md-flex mt-3">
+                                    <button class="btn btn-outline-light btn-sm flex-fill" onclick="checkAvailability('${item.name}')">
+                                        <i class="fa-solid fa-location-dot me-1"></i> Locate
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm flex-fill" onclick="viewManual('${item.name}')">
+                                        <i class="fa-solid fa-book me-1"></i> Manual
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    // Show the image of the Top #1 recommendation
+                    const topItem = data.recommendations[0];
+                    $('#viewerPlaceholder').addClass('d-none');
+                    $('#fallbackMoleculeViewer').addClass('d-none');
+                    
+                    const img = $('#equipmentImageDisplay');
+                    if(topItem.image_url) {
+                        img.attr('src', topItem.image_url).fadeIn();
+                    } else {
+                        img.hide();
+                    }
+                }
+
+                $('#resultsContainer').html(htmlContent);
+
+            } catch(e) { 
+                toggleLoader(false); 
+                alert("Connection Failed"); 
+                console.error(e);
+            }
+        }
+
+        // --- BUTTON HANDLER FUNCTIONS ---
+        async function checkAvailability(equipName) {
+            try {
+                const res = await fetch('/lab/check_availability', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: equipName })
+                });
+                const data = await res.json();
+                
+                alert(`STATUS: ${data.status}\nLOCATION: ${data.location}`);
+            } catch(e) { alert("Error fetching status"); }
+        }
+
+        async function viewManual(equipName) {
+            try {
+                const res = await fetch('/lab/view_manual', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: equipName })
+                });
+                const data = await res.json();
+                
+                alert(`MANUAL FOR ${equipName.toUpperCase()}:\n\n${data.manual_text}\n\n⚠ SAFETY WARNING:\n${data.safety_text}`);
+            } catch(e) { alert("Error fetching manual"); }
+        }
+
+        // --- RENDER HELPERS ---
+        function renderResults(data, title) {
+            $('#resultsContainer').html(`
+                <h6 class="text-info fw-bold mb-3 border-bottom border-secondary pb-2">${title}</h6>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="stat-badge">MW: <span class="text-white">${data.molecular_weight}</span></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-badge">LogP: <span class="text-white">${data.solubility_logp}</span></div>
+                    </div>
+                </div>
+                <div class="p-3 bg-dark rounded border border-secondary">
+                    <small class="text-muted d-block mb-1">AI INSIGHT</small>
+                    <p class="mb-0 small text-white" style="line-height:1.6">${data.analysis}</p>
+                </div>
+            `);
+        }
+
+        function activate3DViewer(smiles) {
+            $('#viewerPlaceholder').addClass('d-none');
+            $('#equipmentImageDisplay').hide();
+            $('#fallbackMoleculeViewer').removeClass('d-none').empty();
+            
+            let viewer = $3Dmol.createViewer($('#fallbackMoleculeViewer'), {backgroundColor: 'black'});
+            
+             $.post('/predict', JSON.stringify({smiles: smiles}), function(resp){
+                 if(resp.mol_3d) {
+                     viewer.addModel(resp.mol_3d, "sdf");
+                     viewer.setStyle({}, {stick: {radius:0.2}, sphere: {scale:0.3}});
+                     viewer.zoomTo();
+                     viewer.render();
+                     viewer.animate({loop: "true", step: 0.5});
+                 }
+             }, 'json');
+        }
+
+        initLabChart(0, 0);
+
+    </script>
+</body>
+</html>

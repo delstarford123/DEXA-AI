@@ -1,0 +1,37 @@
+name,usage,patner_equipment,image,step_of_experiment_used
+Analytical Balance,Precise weighing of pharmaceutical compounds and reagents.,Spatula;Weighing Boat,Analytical Balance.png,Sample Preparation
+Fume Hood,Ventilated enclosure to safely handle hazardous fumes and vapors.,Hot Plate;Magnetic Stirrer,Fume Hood.png,Synthesis
+Micro-Pipette,Accurate measurement and transfer of small liquid volumes.,Pipette Tips;Reagent Reservoir,Micro-Pipette.png,Sample Preparation
+Centrifuge,Separation of fluids, gas or liquid, based on density.,Centrifuge Tubes;Rotor,Centrifuge.png,Purification
+HPLC System,High-Performance Liquid Chromatography for separating drug components.,Chromatography Columns;Vials,HPLC System.png,Quality Control / Analysis
+Rotary Evaporator,Gentle removal of solvents from samples by evaporation.,Vacuum Pump;Chiller,Rotary Evaporator.png,Purification
+Magnetic Stirrer,Mixing chemical solutions using a rotating magnetic field.,Magnetic Stir Bar;Beaker,Magnetic Stirrer.png,Reaction Setup
+Autoclave,Sterilizing laboratory glassware and equipment using high-pressure steam.,Sterilization Tape;Biohazard Bags,Autoclave.png,Safety / Preparation
+Spectrophotometer,Measuring how much a chemical substance absorbs light.,Cuvettes;Blank Solution,Spectrophotometer.png,Analysis
+pH Meter,Measuring the acidity or alkalinity of drug formulations.,Buffer Solutions;Electrode,pH Meter.png,Sample Preparation
+Mass Spectrometer,Identifying the chemical constitution of drug molecules.,Gas Chromatograph;Ion Source,Mass Spectrometer.png,Analysis
+Microscope,Visual inspection of crystalline structures or biological samples.,Slides;Cover Slips,Microscope.png,Observation
+Incubator,Maintaining optimal temperature/humidity for cell cultures.,Cell Culture Flasks;Media,Incubator.png,Biological Testing
+Vortex Mixer,Rapid mixing of small vials of liquid.,Test Tubes;Microcentrifuge Tubes,Vortex Mixer.png,Sample Preparation
+Freeze Dryer,Dehydration of heat-sensitive drugs (Lyophilization)..,Vacuum Pump;Flasks,Freeze Dryer.png,Preservation
+pXRD Instrument,Characterization of crystalline materials in drug compounds.,Sample Holders;Calibration Standards,pXRD Instrument.png,Analysis
+Spectrofluorometer,Measuring fluorescence properties of drug molecules.,Cuvettes;Excitation Source,Spectrofluorometer.png,Analysis
+Thermocycler,Amplification of DNA sequences for genetic analysis.,PCR Tubes;Master Mix,Thermocycler.png,Genetic Testing
+Gel Electrophoresis System,Separation of DNA/RNA fragments by size.,Agarose Gel;Power Supply,Gel Electrophoresis System.png,Genetic Testing
+Water Bath,Maintaining samples at a constant temperature.,Thermometer;Beakers,Water Bath.png,Reaction Setup
+Dissolution Tester,Determining the rate at which tablets dissolve in solution.,Dissolution Vessels;Paddles,Dissolution Tester.png,Quality Control
+Disintegration Tester,Measuring the time required for tablets to break down into particles.,Beakers;Water Bath,Disintegration Tester.png,Quality Control
+Friability Tester,Assessing the durability of tablets against mechanical shock and abrasion.,Drum;Brush,Friability Tester.png,Quality Control
+Tablet Hardness Tester,Measuring the structural integrity and breaking point of tablets.,Cleaning Brush;Tray,Tablet Hardness Tester.png,Quality Control
+Karl Fischer Titrator,Precise determination of trace water content in samples.,Titration Vessel;Reagents,Karl Fischer Titrator.png,Analysis
+Melting Point Apparatus,Determining the melting point of a solid to assess purity.,Capillary Tubes;Thermometer,Melting Point Apparatus.png,Analysis
+Sonicator,Using ultrasonic energy to dissolve difficult samples or clean equipment.,Beaker;Water,Sonicator.png,Sample Preparation
+Gas Chromatograph,Separating and analyzing volatile compounds in a mixture.,Syringe;Column,Gas Chromatograph.png,Analysis
+Refractometer,Measuring the refractive index to identify or check purity of liquids.,Dropper;Cleaning Cloth,Refractometer.png,Analysis
+Viscometer,Measuring the viscosity and flow properties of liquid drug formulations.,Spindle;Beaker,Viscometer.png,Quality Control
+Desiccator,Preserving moisture-sensitive chemicals or samples in a dry environment.,Silica Gel;Vacuum Grease,Desiccator.png,Storage / Preservation
+Hot Plate,Heating samples in beakers or flasks with adjustable temperature.,Magnetic Stir Bar;Beaker,Hot Plate.png,Synthesis
+PCR Machine,Amplifying specific DNA segments via temperature cycling.,PCR Tubes;Pipettes,PCR Machine.png,Genomic Analysis
+Biosafety Cabinet,Providing a sterile environment for handling cell cultures or hazardous agents.,Pipettes;Waste Bin,Biosafety Cabinet.png,Cell Culture
+FTIR Spectrometer,Identifying chemical bonds and molecular structure using infrared absorption.,Sample Holder;Pellet Press,FTIR Spectrometer.png,Analysis
+Vacuum Oven,Drying heat-sensitive materials effectively under reduced pressure.,Vacuum Pump;Trays,Vacuum Oven.png,Sample Preparation
